@@ -13,7 +13,7 @@ CREATE TABLE notes (
   is_favorited INTEGER DEFAULT 0 NOT NULL,
   is_archived INTEGER DEFAULT 0 NOT NULL,
   pics TEXT,
-  videos TEXT
+  videos TEXT DEFAULT '[]'
 );
 
 CREATE TABLE note_tags (
@@ -42,6 +42,7 @@ CREATE TABLE nodes (
 --
 CREATE VIRTUAL TABLE notes_fts USING fts5(
   content,
+  files,
   content='notes',
   content_rowid='id'
 );
@@ -52,14 +53,14 @@ CREATE VIRTUAL TABLE notes_fts USING fts5(
 -- =============================================
 
 CREATE TRIGGER notes_after_insert AFTER INSERT ON notes BEGIN
-  INSERT INTO notes_fts(rowid, content) VALUES (new.id, new.content);
+  INSERT INTO notes_fts(rowid, content, files) VALUES (new.id, new.content, new.files);
 END;
 
 CREATE TRIGGER notes_after_delete AFTER DELETE ON notes BEGIN
-  INSERT INTO notes_fts(notes_fts, rowid, content) VALUES ('delete', old.id, old.content);
+  INSERT INTO notes_fts(notes_fts, rowid, content, files) VALUES ('delete', old.id, old.content, old.files);
 END;
 
 CREATE TRIGGER notes_after_update AFTER UPDATE ON notes BEGIN
-  INSERT INTO notes_fts(notes_fts, rowid, content) VALUES ('delete', old.id, old.content);
-  INSERT INTO notes_fts(rowid, content) VALUES (new.id, new.content);
+  INSERT INTO notes_fts(notes_fts, rowid, content, files) VALUES ('delete', old.id, old.content, old.files);
+  INSERT INTO notes_fts(rowid, content, files) VALUES (new.id, new.content, new.files);
 END;
